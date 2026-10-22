@@ -1,0 +1,90 @@
+# Basis-Konfiguration (ohne Secrets — die kommen aus .env).
+# Für lokale Abweichungen: config/config.local.yaml anlegen (gitignored);
+# deren Werte werden über diese Datei gelegt.
+
+dry_run: true            # Meilenstein 1: nichts ausführen, nur loggen
+
+paths:
+  android_sdk: ~/Library/Android/sdk
+  data_dir: data
+  log_dir: logs
+
+logging:
+  level: INFO
+  keep_screenshots: true          # Screenshots in data/screenshots ablegen
+  screenshot_retention_days: 7    # ältere werden beim Start gelöscht
+
+# Ein Eintrag pro Emulator-Instanz. Später: ein Gerät pro Plattform,
+# mehrere parallel — Ports pro Instanz eindeutig halten
+# (Konsolen-Port gerade Zahl 5554..5584, ADB-Serial = emulator-<port>).
+devices:
+  - name: bumble-1
+    platform: bumble
+    avd:
+      name: dating_bumble_1
+      system_image: "system-images;android-37.0;google_apis_playstore;arm64-v8a"
+      device_profile: pixel_7
+      ram_mb: 3072
+      data_partition: 8G
+      headless: false               # true = -no-window
+      extra_args: ["-no-boot-anim", "-gpu", "host"]
+    console_port: 5554
+    appium:
+      enabled: true
+      url: http://127.0.0.1:4723
+      system_port: 8200             # UiAutomator2-Server, je Instanz eindeutig
+
+platforms:
+  bumble:
+    app_package: com.bumble.app
+    # Platzhalter — mit `python -m platforms.bumble.inspect` echte IDs ermitteln
+    selectors_file: platforms/bumble/selectors.yaml
+
+agent:
+  # claude_cli = Claude-Abo über die Claude-Code-CLI (kein API-Key nötig)
+  # api        = Anthropic API (ANTHROPIC_API_KEY in .env, Abrechnung nach Verbrauch)
+  backend: claude_cli
+  claude_cli_path: auto       # auto = PATH, sonst die von der Claude-Desktop-App mitgelieferte CLI
+  cli_timeout_s: 180
+  model: claude-sonnet-5-5
+  # nur für backend: api
+  effort: low                 # low | medium | high | xhigh | max
+  max_tokens: 4000
+  refusal_fallbacks: true     # server-seitige Fallbacks bei Ablehnung
+  max_image_edge: 1600        # Screenshots vor dem Senden herunterskalieren (px)
+  scroll_profile: true        # Profil durchscrollen und als Ganzes bewerten (kein Swipe)
+  max_profile_shots: 5         # mit großen Scroll-Schritten (≈60 % Bildschirm)
+  ready_sound: Tink           # macOS-Ton, wenn ein Profil fertig bewertet ist (leer = aus)
+  poll_interval_s: 4          # Dry-Run: wie oft auf neuen Bildschirm prüfen
+  # Hinweise fließen in den Prompt ein (Alter/Entfernung filtert die App selbst)
+  preferences:
+    dealbreakers: ["sucht nur Abenteuer / nichts Ernstes"]
+    notes: Hobbys und Herkunft spielen keine Rolle. Gelegentliches Rauchen ist in Ordnung.
+  # Finale Entscheidung (agent/rules.py)
+  rules:
+    instant_like_score: 9          # ab diesem Score immer Like ("10/10")
+    min_score: 7                   # darunter links
+    exclude_body_types: [overweight]
+    exclude_smoking: [regularly]
+
+delays:
+  dry_run_time_scale: 0.1     # im Trockenlauf Pausen auf 10 % verkürzen
+  # Pausen in Sekunden, log-normal um den Median, gekappt auf [min, max]
+  actions:
+    view_profile: {median: 1.5, sigma: 0.35, min: 0.8, max: 4}
+    between_swipes: {median: 1.0, sigma: 0.35, min: 0.5, max: 3}
+    before_tap: {median: 0.4, sigma: 0.3, min: 0.2, max: 1.2}
+    scroll_profile: {median: 0.4, sigma: 0.3, min: 0.2, max: 1.2}  # zusätzlich zur Stillstand-Prüfung
+  # Gelegentliche längere Pausen
+  micro_break: {probability: 0, min: 20, max: 90}   # aus
+  # Sitzungen: nach N Aktionen eine längere Pause
+  session:
+    actions_min: 15
+    actions_max: 40
+    break_min_s: 600
+    break_max_s: 2400
+  active_hours: null          # rund um die Uhr; begrenzen z. B. mit {start: "08:30", end: "23:00"}
+  daily_limits:
+    swipe_right: 40
+    swipe_left: 120
+    total: 150

@@ -1,0 +1,40 @@
+# UI-Selektoren für Bumble. ALLE WERTE SIND UNGEPRÜFTE PLATZHALTER.
+# Bumble ändert IDs mit App-Updates. Echte Werte ermitteln mit:
+#   python -m platforms.bumble.inspect --device bumble-1
+# (speichert UI-Hierarchie-XML + Screenshot in data/inspect/)
+#
+# Format: Liste von Locators, erster Treffer gewinnt.
+#   - {by: id, value: "com.bumble.app:id/..."}
+#   - {by: text, value: "..."}          # exakter sichtbarer Text
+#   - {by: desc, value: "..."}          # content-desc
+
+screens:
+  encounters:          # Swipe-Stapel
+    - {by: id, value: "com.bumble.app:id/encounters_container"}
+  match_popup:         # "It's a match"
+    - {by: text, value: "Zum Chat"}
+    - {by: text, value: "Chat now"}
+  paywall:
+    - {by: id, value: "com.bumble.app:id/paywall_container"}
+  out_of_profiles:
+    - {by: text, value: "Das war's fürs Erste"}
+
+elements:
+  profile_card:
+    - {by: id, value: "com.bumble.app:id/encounters_card"}
+  like_button:
+    - {by: desc, value: "Like"}
+  pass_button:
+    - {by: desc, value: "Pass"}
+
+# Swipe-Bereich relativ zur Bildschirmgröße (Fallback, wenn keine Karte gefunden)
+swipe_area: {left: 0.10, top: 0.25, width: 0.80, height: 0.45}
+
+# Bestätigungsdialoge nach einem Swipe (Standard-Android-AlertDialog).
+# Bekannte Titel → Agent bestätigt mit dem Positiv-Knopf (android:id/button1),
+# weil der Dialog nur die schon getroffene Entscheidung bestätigt.
+# Jeder andere Dialog → Sicherheits-Stopp, ich entscheide selbst.
+confirm_dialogs:
+  title_id: com.bumble.app:id/alertTitle
+  positive_id: android:id/button1
+  titles: ["Interested?", "Not interested?", "Interessiert?", "Nicht interessiert?"]

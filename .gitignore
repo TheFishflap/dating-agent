@@ -1,0 +1,28 @@
+# Secrets — niemals committen
+.env
+.env.*
+!.env.example
+config/config.local.yaml
+config/*.secret.yaml
+credentials*.json
+token*.json
+
+# Laufzeitdaten (enthalten Screenshots/Profildaten Dritter)
+data/
+logs/
+*.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# macOS / IDE
+.DS_Store
+.idea/
+.vscode/
